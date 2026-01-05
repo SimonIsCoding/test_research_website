@@ -364,8 +364,8 @@
 
             // Prepare payload
             const payload = {
-                search_query: searchQuery,
-                number_of_results: numberOfResults
+                query: searchQuery,
+                maxRows: numberOfResults
             };
 
             addLog('Envoi de la requête au webhook n8n...', 'info');
