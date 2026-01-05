@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps Data Extractor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #2d3748;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #718096;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #4a5568;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .search-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 1s linear;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .logs-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .logs-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .logs {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+        }
+
+        .log-info {
+            color: #63b3ed;
+        }
+
+        .log-success {
+            color: #68d391;
+        }
+
+        .log-error {
+            color: #fc8181;
+        }
+
+        .log-warning {
+            color: #f6ad55;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f0fff4;
+            border: 2px solid #68d391;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .result-title {
+            color: #22543d;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .result-link {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #48bb78;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .result-link:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .error-container {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 8px;
+        }
+
+        .error-title {
+            color: #742a2a;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .error-message {
+            color: #c53030;
+            font-size: 14px;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ Google Maps Data Extractor</h1>
+        <p class="subtitle">Extrayez facilement des données de Google Maps</p>
+
+        <form id="searchForm">
+            <div class="form-group">
+                <label for="searchQuery">Recherche Google Maps</label>
+                <input
+                    type="text"
+                    id="searchQuery"
+                    placeholder="Ex: Restaurant à Paris"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="numberOfResults">Nombre de résultats (max 100)</label>
+                <input
+                    type="number"
+                    id="numberOfResults"
+                    placeholder="Ex: 20"
+                    min="1"
+                    max="100"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="search-btn" id="searchBtn">
+                Rechercher
+            </button>
+        </form>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <p class="progress-text" id="progressText">Traitement en cours... 0s / 60s</p>
+        </div>
+
+        <div class="logs-container" id="logsContainer">
+            <div class="logs-title">📋 Logs</div>
+            <div class="logs" id="logs"></div>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-title">✅ Extraction terminée avec succès !</div>
+            <a href="#" id="resultLink" target="_blank" class="result-link">
+                Ouvrir le Google Sheet
+            </a>
+        </div>
+
+        <div class="error-container" id="errorContainer">
+            <div class="error-title">❌ Erreur</div>
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = 'https://n8n.srv1076432.hstgr.cloud/webhook/search';
+        const PROCESSING_TIME = 60; // 60 seconds
+
+        // Elements
+        const searchForm = document.getElementById('searchForm');
+        const searchBtn = document.getElementById('searchBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const logsContainer = document.getElementById('logsContainer');
+        const logs = document.getElementById('logs');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultLink = document.getElementById('resultLink');
+        const errorContainer = document.getElementById('errorContainer');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Logging function
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString('fr-FR');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logs.appendChild(logEntry);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        // Reset UI
+        function resetUI() {
+            progressContainer.style.display = 'none';
+            resultContainer.style.display = 'none';
+            errorContainer.style.display = 'none';
+            logsContainer.style.display = 'block';
+            logs.innerHTML = '';
+            progressBar.style.width = '0%';
+        }
+
+        // Update progress bar
+        function updateProgress(elapsed) {
+            const percentage = (elapsed / PROCESSING_TIME) * 100;
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `Traitement en cours... ${elapsed}s / ${PROCESSING_TIME}s`;
+        }
+
+        // Handle form submission
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const searchQuery = document.getElementById('searchQuery').value.trim();
+            const numberOfResults = parseInt(document.getElementById('numberOfResults').value);
+
+            // Validation
+            if (!searchQuery) {
+                alert('Veuillez entrer une recherche');
+                return;
+            }
+
+            if (numberOfResults < 1 || numberOfResults > 100) {
+                alert('Le nombre de résultats doit être entre 1 et 100');
+                return;
+            }
+
+            // Reset UI
+            resetUI();
+            searchBtn.disabled = true;
+            progressContainer.style.display = 'block';
+
+            addLog('Initialisation de la recherche...', 'info');
+            addLog(`Requête: "${searchQuery}"`, 'info');
+            addLog(`Nombre de résultats demandés: ${numberOfResults}`, 'info');
+
+            // Prepare payload
+            const payload = {
+                search_query: searchQuery,
+                number_of_results: numberOfResults
+            };
+
+            addLog('Envoi de la requête au webhook n8n...', 'info');
+            addLog(`URL: ${WEBHOOK_URL}`, 'info');
+            addLog(`Payload: ${JSON.stringify(payload)}`, 'info');
+
+            // Start progress bar
+            let elapsed = 0;
+            const progressInterval = setInterval(() => {
+                elapsed++;
+                updateProgress(elapsed);
+
+                if (elapsed >= PROCESSING_TIME) {
+                    clearInterval(progressInterval);
+                }
+            }, 1000);
+
+            try {
+                const startTime = Date.now();
+
+                // Send request to webhook
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+                addLog(`Réponse reçue en ${duration}s`, 'success');
+                addLog(`Status HTTP: ${response.status}`, 'info');
+
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                addLog(`Données reçues: ${JSON.stringify(data)}`, 'success');
+
+                // Clear progress interval
+                clearInterval(progressInterval);
+                updateProgress(PROCESSING_TIME);
+
+                // Check if we have the sheet URL
+                if (data.sheetUrl) {
+                    addLog('Google Sheet créé avec succès!', 'success');
+                    addLog(`URL: ${data.sheetUrl}`, 'success');
+
+                    // Show result
+                    resultContainer.style.display = 'block';
+                    resultLink.href = data.sheetUrl;
+
+                    progressContainer.style.display = 'none';
+                } else {
+                    throw new Error('URL du Google Sheet non trouvée dans la réponse');
+                }
+
+            } catch (error) {
+                addLog(`ERREUR: ${error.message}`, 'error');
+
+                clearInterval(progressInterval);
+                progressContainer.style.display = 'none';
+
+                // Show error
+                errorContainer.style.display = 'block';
+                errorMessage.textContent = error.message;
+
+                console.error('Error:', error);
+            } finally {
+                searchBtn.disabled = false;
+            }
+        });
+
+        // Initial log
+        addLog('Application prête', 'success');
+    </script>
+</body>
+</html>
